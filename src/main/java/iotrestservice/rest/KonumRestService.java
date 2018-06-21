@@ -11,6 +11,7 @@ import com.mysql.jdbc.Statement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import iotrestservice.KonumBilgisi;
 
@@ -21,23 +22,22 @@ public class KonumRestService {
 	@GET
 	@Path("/{x}/{y}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getMsg(@PathParam("x") Double x, @PathParam("y") Double y) {
+	public String getMsg(@PathParam("x") Double x, @PathParam("y") Double y) throws SQLException {
 
 		String service = null;
 		Double enlem = x;
 		Double boylam = y;
 		Double yaricap;
 		String mesaj;
-
+		Connection con=null;
 		try
 
 		{
 			RestDbConnect restDb = new RestDbConnect();
-			Connection con = restDb.getConnection();
+			con = restDb.getConnection();
 			PreparedStatement stmt = con.prepareStatement("SELECT * FROM konum");
-			Statement st=(Statement) con.createStatement();
-			
-		 
+			Statement st = (Statement) con.createStatement();
+
 			ResultSet rs = stmt.executeQuery();
 
 			KonumBilgisi knmListAsil = new KonumBilgisi();
@@ -72,19 +72,25 @@ public class KonumRestService {
 					}
 				}
 			}
+			
 			if (enKucuk != 1000000) {
-				st.executeUpdate("Insert into ogrenci_konum(Mesaj) values('"+knmListAsil.getMesaj()+"')");
+				st.executeUpdate("Insert into ogrenci_konum(Mesaj) values('" + knmListAsil.getMesaj() + "')");
 				knmListAsil.getMesaj().length();
-				
-			System.out.println(knmListAsil.getMesaj());
+
+				System.out.println(knmListAsil.getMesaj());
 				return knmListAsil.getMesaj();
-				
+
 			}
 
 		}
 
 		catch (Exception e) {
 			e.printStackTrace();
+		}
+		finally {
+			if(null !=con) {
+				con.close();
+			}
 		}
 		return service;
 

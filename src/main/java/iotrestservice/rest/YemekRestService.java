@@ -3,6 +3,7 @@ package iotrestservice.rest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,45 +20,45 @@ import iotrestservice.YemekListe;
 @Path("/yemekhane")
 public class YemekRestService {
 
-
 	@GET
 	@Path("/{ogun}")
 
 	@Produces(MediaType.APPLICATION_JSON)
-	public String Service(@PathParam("ogun") String ogun) {
-		String service = null;
-
-		ArrayList<YemekListe> yemekList = new ArrayList<YemekListe>();
+	public ArrayList<YemekListe> Service(@PathParam("ogun") String ogun) throws SQLException {
+		ArrayList<YemekListe> service = null;
+		Connection con = null;
 		try {
 
-			if (ogun.equals("oglen") || ogun.equals("aksam")) {
-				RestDbConnect restDb = new RestDbConnect();
-				Connection con = restDb.getConnection();
-				/*Date simdikiZaman = new Date();
-				DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-				String tarih = df.format(simdikiZaman);
-				PreparedStatement stmt = con.prepareStatement(
-						"SELECT Yemek_Adi FROM yemek WHERE Tarih='" + tarih + "' and  Ogun='" + ogun + "'");*/
-				PreparedStatement stmt = con.prepareStatement(
-						"SELECT Yemek_Adi FROM yemek WHERE Tarih='2018.04.30' and  Ogun='" + ogun + "'");
-				ResultSet rs = stmt.executeQuery();
-				while (rs.next()) {
-					YemekListe ymkList = new YemekListe();
-					ymkList.setYemek_adi(rs.getString("Yemek_Adi"));
+			RestDbConnect restDb = new RestDbConnect();
+			con = restDb.getConnection();
+			Date simdikiZaman = new Date();
+			DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+			String tarih = df.format(simdikiZaman);
 
-					yemekList.add(ymkList);
+			PreparedStatement stmt = con.prepareStatement(
+					"SELECT Yemek_Adi FROM yemek WHERE Tarih='" + tarih + "' and  Ogun='" + ogun + "'");
 
-				}
-				Gson gson = new Gson();
-				service = gson.toJson(yemekList);
-				return service;
+			ResultSet rs = stmt.executeQuery();
 
+			ArrayList<YemekListe> yemekList = new ArrayList<YemekListe>();
+
+			while (rs.next()) {
+
+				YemekListe ymkList = new YemekListe();
+				ymkList.setYemek_adi(rs.getString("Yemek_Adi"));
+				yemekList.add(ymkList);
 			}
+
+			service = yemekList;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		finally {
+			if(null !=con) {
+				con.close();
+			}
+		}
 		return service;
 	}
-
 }
